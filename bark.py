@@ -4,15 +4,26 @@ import commands
 
 
 class Option:
-    def __init__(self, name, command, prep_call=None):
+    def __init__(self, name, command, prep_call=None, success_message='{result}'):
         self.name = name
         self.command = command
         self.prep_call = prep_call
+        self.success_message = success_message
 
     def choose(self):
         data = self.prep_call() if self.prep_call else None
-        message = self.command.execute(data) if data else self.command.execute()
-        print(message)
+        success, result = self.command.execute(data)
+
+        formatted_result = ''
+
+        if isinstance(result, list):
+            for bookmark in result:
+                formatted_result += '\n' + format_bookmark(bookmark)
+        else:
+            formatted_result = result
+
+        if success:
+            print(self.success_message.format(result=formatted_result))
 
     def __str__(self):
         return self.name
@@ -36,6 +47,12 @@ def get_new_bookmark_data():
 def get_bookmark_id_for_deletion():
     return get_user_input('Enter a bookmark ID to delete')
 
+
+def format_bookmark(bookmark):
+    return '\t'.join(
+        str(field) if field else ''
+        for field in bookmark
+    )
 
 
 def print_options(options):
@@ -63,11 +80,27 @@ def clear_screen():
 
 def loop():
     options = {
-        'A': Option('Add bookmark', commands.AddBookmarkCommand(), prep_call=get_new_bookmark_data),
-        'B': Option('List bookmarks, order by date', commands.ListBookmarksCommand()),
-        'T': Option('List bookmarks, order by title', commands.ListBookmarksCommand(order_by='title')),
-        'D': Option('Delete bookmark', commands.DeleteBookmarkCommand(), prep_call=get_bookmark_id_for_deletion),
-        'Q': Option('Quit', commands.QuitCommand())
+        'A': Option(
+            'Add bookmark',
+            commands.AddBookmarkCommand(),
+            prep_call=get_new_bookmark_data,
+            success_message='Bookmark added!'
+            ),
+        'B': Option(
+            'List bookmarks, order by date',
+            commands.ListBookmarksCommand()
+            ),
+        'T': Option('List bookmarks, order by title',
+                    commands.ListBookmarksCommand(order_by='title')
+                    ),
+        'D': Option('Delete bookmark',
+                    commands.DeleteBookmarkCommand(),
+                    prep_call=get_bookmark_id_for_deletion,
+                    success_message='Bookmark deleted!'
+                    ),
+        'Q': Option('Quit',
+                    commands.QuitCommand()
+                    )
     }
     clear_screen()
     print_options(options)
