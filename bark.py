@@ -85,11 +85,11 @@ def loop():
             commands.AddBookmarkCommand(),
             prep_call=get_new_bookmark_data,
             success_message='Bookmark added!'
-            ),
+        ),
         'B': Option(
             'List bookmarks, order by date',
             commands.ListBookmarksCommand()
-            ),
+        ),
         'T': Option('List bookmarks, order by title',
                     commands.ListBookmarksCommand(order_by='title')
                     ),
@@ -110,6 +110,5 @@ def loop():
 
 
 if __name__ == "__main__":
-    commands.CreateBookmarksTableCommand().execute()
     while True:
         loop()

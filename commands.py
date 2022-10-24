@@ -2,9 +2,9 @@ import sys
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-from database import DatabaseManager
+from persistance import BookmarkDatabase
 
-db = DatabaseManager('bookmarks.db')
+persistance = BookmarkDatabase()
 
 
 class Command(ABC):
@@ -13,24 +13,10 @@ class Command(ABC):
         pass
 
 
-class CreateBookmarksTableCommand(Command):
-    def execute(self, data=None):
-        db.create_table(
-            'bookmarks',
-            {
-                'id': 'integer primary key autoincrement',
-                'title': 'text not null',
-                'url': 'text not null',
-                'notes': 'text',
-                'date_added': 'text not null'
-            }
-        )
-
-
 class AddBookmarkCommand(Command):
     def execute(self, data):
         data['date_added'] = datetime.utcnow().isoformat()
-        db.add('bookmarks', data)
+        persistance.create(data)
         return True, None
 
 
@@ -39,12 +25,12 @@ class ListBookmarksCommand(Command):
         self.order_by = order_by
 
     def execute(self, data=None):
-        return True, db.select('bookmarks', order_by=self.order_by).fetchall()
+        return True, persistance.list(order_by=self.order_by)
 
 
 class DeleteBookmarkCommand(Command):
     def execute(self, data):
-        db.delete('bookmarks', {'id': data})
+        persistance.delete(data)
         return True, None
 
 
