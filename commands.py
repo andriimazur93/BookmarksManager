@@ -1,12 +1,20 @@
 import sys
+from abc import ABC, abstractmethod
 from datetime import datetime
 
 from database import DatabaseManager
 
 db = DatabaseManager('bookmarks.db')
 
-class CreateBookmarksTableCommand:
-    def execute(self):
+
+class Command(ABC):
+    @abstractmethod
+    def execute(self, data):
+        pass
+
+
+class CreateBookmarksTableCommand(Command):
+    def execute(self, data=None):
         db.create_table(
             'bookmarks',
             {
@@ -19,27 +27,27 @@ class CreateBookmarksTableCommand:
         )
 
 
-class AddBookmarkCommand:
+class AddBookmarkCommand(Command):
     def execute(self, data):
         data['date_added'] = datetime.utcnow().isoformat()
         db.add('bookmarks', data)
         return 'Bookmark added'
 
 
-class ListBookmarksCommand:
+class ListBookmarksCommand(Command):
     def __init__(self, order_by='date_added'):
         self.order_by = order_by
 
-    def execute(self):
+    def execute(self, data=None):
         return db.select('bookmarks', order_by=self.order_by).fetchall()
 
 
-class DeleteBookmarkCommand:
+class DeleteBookmarkCommand(Command):
     def execute(self, data):
         db.delete('bookmarks', {'id': data})
         return 'Bookmark deleted!'
 
 
-class QuitCommand:
-    def execute(self):
+class QuitCommand(Command):
+    def execute(self, data=None):
         sys.exit()
